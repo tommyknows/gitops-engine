@@ -24,6 +24,7 @@ import (
 	"k8s.io/kubectl/pkg/cmd/apply"
 	"k8s.io/kubectl/pkg/cmd/auth"
 	"k8s.io/kubectl/pkg/cmd/create"
+	"k8s.io/kubectl/pkg/cmd/delete"
 	"k8s.io/kubectl/pkg/cmd/replace"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/scheme"
@@ -242,13 +243,13 @@ func (k *kubectlResourceOperations) ApplyResource(ctx context.Context, obj *unst
 }
 
 func (k *kubectlResourceOperations) newApplyOptions(ioStreams genericclioptions.IOStreams, obj *unstructured.Unstructured, fileName string, validate bool, force bool, dryRunStrategy cmdutil.DryRunStrategy) (*apply.ApplyOptions, error) {
-	o := apply.NewApplyOptions(ioStreams)
+	o := &apply.ApplyOptions{}
 	dynamicClient, err := dynamic.NewForConfig(k.config)
 	if err != nil {
 		return nil, err
 	}
 	o.DynamicClient = dynamicClient
-	o.DeleteOptions, err = o.DeleteFlags.ToOptions(dynamicClient, o.IOStreams)
+	o.DeleteOptions, err = delete.NewDeleteFlags("").ToOptions(dynamicClient, ioStreams)
 	if err != nil {
 		return nil, err
 	}
