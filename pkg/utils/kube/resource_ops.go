@@ -14,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/cli-runtime/pkg/resource"
@@ -243,7 +244,16 @@ func (k *kubectlResourceOperations) ApplyResource(ctx context.Context, obj *unst
 }
 
 func (k *kubectlResourceOperations) newApplyOptions(ioStreams genericclioptions.IOStreams, obj *unstructured.Unstructured, fileName string, validate bool, force bool, dryRunStrategy cmdutil.DryRunStrategy) (*apply.ApplyOptions, error) {
-	o := &apply.ApplyOptions{}
+	flags := apply.NewApplyFlags(k.fact, ioStreams)
+	o := &apply.ApplyOptions{
+		IOStreams:         ioStreams,
+		VisitedUids:       sets.NewString(),
+		VisitedNamespaces: sets.NewString(),
+		Recorder:          genericclioptions.NoopRecorder{},
+		PrintFlags:        flags.PrintFlags,
+		Overwrite:         true,
+		OpenAPIPatch:      true,
+	}
 	dynamicClient, err := dynamic.NewForConfig(k.config)
 	if err != nil {
 		return nil, err
